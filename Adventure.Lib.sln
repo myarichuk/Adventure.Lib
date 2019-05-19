@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.452
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adventure.Playground", "Adventure.Playground\Adventure.Playground.csproj", "{915A55B7-3D7E-4009-BBA8-3262E93959BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adventure.Playground", "Adventure.Playground\Adventure.Playground.csproj", "{915A55B7-3D7E-4009-BBA8-3262E93959BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adventure.World", "Adventure.World\Adventure.World.csproj", "{CB1534A8-03BD-404A-B794-B9B6C4266858}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adventure.World", "Adventure.World\Adventure.World.csproj", "{CB1534A8-03BD-404A-B794-B9B6C4266858}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adventure.ECS", "Adventure.ECS\Adventure.ECS.csproj", "{4FFF8B2D-39CC-4E4C-9EA8-F17CFB0D030A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adventure.ECS", "Adventure.ECS\Adventure.ECS.csproj", "{4FFF8B2D-39CC-4E4C-9EA8-F17CFB0D030A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adventure.Map", "Adventure.Map\Adventure.Map.csproj", "{379E344D-963F-4971-9BF3-680FE67975D5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adventure.Map", "Adventure.Map\Adventure.Map.csproj", "{379E344D-963F-4971-9BF3-680FE67975D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adventure.World.Visualizer", "Adventure.World.Visualizer\Adventure.World.Visualizer.csproj", "{D07CB6D0-5EAD-42C5-A510-1A182CEC0870}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{379E344D-963F-4971-9BF3-680FE67975D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{379E344D-963F-4971-9BF3-680FE67975D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{379E344D-963F-4971-9BF3-680FE67975D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D07CB6D0-5EAD-42C5-A510-1A182CEC0870}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D07CB6D0-5EAD-42C5-A510-1A182CEC0870}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D07CB6D0-5EAD-42C5-A510-1A182CEC0870}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D07CB6D0-5EAD-42C5-A510-1A182CEC0870}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

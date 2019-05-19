@@ -25,11 +25,7 @@ namespace Adventure.Map
             _cache = new ViewAccessorCache(AccessorViewCacheSize, this);            
         }
 
-        public Stream Export()
-        {
-            var viewStream = _mmf.CreateViewStream(0, Width * Height * _cellSize);
-            return viewStream;
-        }
+        public Stream Export() => _mmf.CreateViewStream(0, Width * Height * _cellSize);
 
         public void Import(Stream stream)
         {
