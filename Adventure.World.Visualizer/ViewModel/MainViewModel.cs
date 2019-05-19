@@ -71,10 +71,6 @@ namespace Adventure.World.Visualizer.ViewModel
             var e1 = new LineBuilder();
             e1.AddBox(new Vector3(0, 0, 0), 1, 0.5, 2);
 
-            var textBuilder = new MeshBuilder();
-            //textBuilder.ExtrudeText("HelixToolkit.SharpDX", "Arial", System.Windows.FontStyles.Normal, System.Windows.FontWeights.Bold,
-            //    14, new Vector3(1, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 0, 1));
-
        
             RedMaterial = PhongMaterials.Red;
         
@@ -89,8 +85,8 @@ namespace Adventure.World.Visualizer.ViewModel
                 BitmapExtensions.CreateLinearGradientBitmapStream(EffectsManager, 128, 128, Direct2DImageFormat.Bmp,
                 new Vector2(0, 0), new Vector2(0, 128), new SharpDX.Direct2D1.GradientStop[]
                 {
-                    new SharpDX.Direct2D1.GradientStop(){ Color = Color.White.ToColor4(), Position = 0f },
-                    new SharpDX.Direct2D1.GradientStop(){ Color = Color.DarkGray.ToColor4(), Position = 1f }
+                    new SharpDX.Direct2D1.GradientStop(){ Color = Color.DarkGray, Position = 0f },
+                    new SharpDX.Direct2D1.GradientStop(){ Color = Color.Black.ToColor4(), Position = 1.0f }
                 });
 
             GenerateFibonacciSphereCommand = new RelayCommand(() => CreateFibonacciSphereMesh());

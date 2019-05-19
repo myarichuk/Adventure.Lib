@@ -3,9 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Adventure.World.Visualizer"
         xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
         mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         DataContext="{Binding Main, Source={StaticResource Locator}}"
         Title="World Generator Visualizer" Height="768" Width="1024">
     <Grid>
@@ -33,10 +34,11 @@
             <DockPanel VerticalAlignment="Center" Margin="10">
                 <Label VerticalContentAlignment="Center" Content="{Binding ElementName=FibonacciSamples, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" Width="60" />
                 <Label VerticalContentAlignment="Center" Content="Fibonacci Samples: " DockPanel.Dock="Left"/>
-                <Slider Value="{Binding FibonacciSamples}" Name="FibonacciSamples" Maximum="10000" Minimum="100" TickPlacement="BottomRight" TickFrequency="100" />
+                <Slider Value="{Binding FibonacciSamples}" Name="FibonacciSamples" Maximum="10000" Minimum="100" VerticalContentAlignment="Center" TickFrequency="100" />
             </DockPanel>
         </StackPanel>
         <hx:Viewport3DX
+            Margin="5"
             Grid.Row="1"
             Grid.Column="1"
             BackgroundColor="Black"
@@ -51,12 +53,6 @@
             TextBrush="Black"
             UseDefaultGestures="False">
             <hx:Viewport3DX.InputBindings>
-                <KeyBinding Key="B" Command="hx:ViewportCommands.BackView" />
-                <KeyBinding Key="F" Command="hx:ViewportCommands.FrontView" />
-                <KeyBinding Key="U" Command="hx:ViewportCommands.TopView" />
-                <KeyBinding Key="D" Command="hx:ViewportCommands.BottomView" />
-                <KeyBinding Key="L" Command="hx:ViewportCommands.LeftView" />
-                <KeyBinding Key="R" Command="hx:ViewportCommands.RightView" />
                 <KeyBinding Command="hx:ViewportCommands.ZoomExtents" Gesture="Control+E" />
                 <MouseBinding Command="hx:ViewportCommands.Rotate" Gesture="RightClick" />
                 <MouseBinding Command="hx:ViewportCommands.Zoom" Gesture="MiddleClick" />
@@ -64,10 +60,11 @@
             </hx:Viewport3DX.InputBindings>
             <hx:AmbientLight3D Color="{Binding AmbientLightColor}" />
             <hx:DirectionalLight3D Direction="{Binding Camera.LookDirection}" Color="{Binding DirectionalLightColor}" />
-            <hx:PointGeometryModel3D Geometry="{Binding Points}" Color="FloralWhite" />        
+            <hx:PointGeometryModel3D Geometry="{Binding Points}" Color="FloralWhite" /> 
+            <!--<hx:ScreenQuadModel3D Texture="{Binding BackgroundTexture}" />-->
         </hx:Viewport3DX>
 
-        <StatusBar Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2"  VerticalAlignment="Bottom">
+        <StatusBar Grid.Column="1" Grid.Row="2"  VerticalAlignment="Bottom">
             <StatusBar.Background>
                 <SolidColorBrush Opacity="0.5" Color="WhiteSmoke" />
             </StatusBar.Background>
