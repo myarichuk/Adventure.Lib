@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
 
 namespace Adventure.World
 {
     public static class Utils
     {
-        private static readonly Random _random = new Random();
-
+        private static readonly Random Random = new Random();
+    
         //credit: adapted from here - https://stackoverflow.com/a/26127012/320103
         public static IEnumerable<Vector3> FibonacciSphere(int samples = 1000, bool randomize = true)
         {
             var rnd = 1.0f;
             if(randomize)
-                rnd = _random.Next() * samples;
+                rnd = Random.Next() * samples;
             var offset = 2.0f / samples;
 
             var increment = Math.PI * (3.0f - Math.Sqrt(5.0f));
