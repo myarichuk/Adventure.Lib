@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Adventure.ECS\Adventure.ECS.csproj" />
+    <ProjectReference Include="..\Adventure.Map\Adventure.Map.csproj" />
     <ProjectReference Include="..\Adventure.World\Adventure.World.csproj" />
   </ItemGroup>
 

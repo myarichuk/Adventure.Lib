@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adventure.World", "Adventur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adventure.ECS", "Adventure.ECS\Adventure.ECS.csproj", "{4FFF8B2D-39CC-4E4C-9EA8-F17CFB0D030A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adventure.Map", "Adventure.Map\Adventure.Map.csproj", "{379E344D-963F-4971-9BF3-680FE67975D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{4FFF8B2D-39CC-4E4C-9EA8-F17CFB0D030A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FFF8B2D-39CC-4E4C-9EA8-F17CFB0D030A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FFF8B2D-39CC-4E4C-9EA8-F17CFB0D030A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{379E344D-963F-4971-9BF3-680FE67975D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{379E344D-963F-4971-9BF3-680FE67975D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{379E344D-963F-4971-9BF3-680FE67975D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{379E344D-963F-4971-9BF3-680FE67975D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
