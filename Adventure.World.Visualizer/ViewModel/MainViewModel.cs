@@ -1,4 +1,5 @@
 using System;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Windows.Media.Media3D;
@@ -58,21 +59,21 @@ namespace Adventure.World.Visualizer.ViewModel
             DirectionalLightColor = Color.White;
             DirectionalLightDirection = new Vector3D(-2, -5, -2);
 
-            // scene model3d
-            var b1 = new MeshBuilder();            
-            b1.AddSphere(new Vector3(0, 0, 0), 0.5);
-            b1.AddBox(new Vector3(0, 0, 0), 1, 0.5, 2, BoxFaces.All);
+            //// scene model3d
+            //var b1 = new MeshBuilder();            
+            //b1.AddSphere(new Vector3(0, 0, 0), 0.5);
+            //b1.AddBox(new Vector3(0, 0, 0), 1, 0.5, 2, BoxFaces.All);
            
-            var meshGeometry = b1.ToMeshGeometry3D();
-            meshGeometry.Colors = new Color4Collection(meshGeometry.TextureCoordinates.Select(x => x.ToColor4()));
-            Model = meshGeometry;
+            //var meshGeometry = b1.ToMeshGeometry3D();
+            //meshGeometry.Colors = new Color4Collection(meshGeometry.TextureCoordinates.Select(x => x.ToColor4()));
+            //Model = meshGeometry;
 
-            // lines model3d
+            //// lines model3d
             var e1 = new LineBuilder();
             e1.AddBox(new Vector3(0, 0, 0), 1, 0.5, 2);
 
        
-            RedMaterial = PhongMaterials.Red;
+            RedMaterial = PhongMaterials.BlackPlastic;
         
             //var diffColor = this.RedMaterial.DiffuseColor;
             //diffColor.Alpha = 0.5f;
@@ -90,9 +91,55 @@ namespace Adventure.World.Visualizer.ViewModel
                 });
 
             GenerateFibonacciSphereCommand = new RelayCommand(() => CreateFibonacciSphereMesh());
+            GenerateStereographicProjectionCommand = new RelayCommand(()=> CreateStereographicProjection());
+            GenerateVoronoiMeshCommand = new RelayCommand(() => CreateVoronoiMesh());
         }
 
         public RelayCommand GenerateFibonacciSphereCommand { get; private set; }
+        public RelayCommand GenerateStereographicProjectionCommand { get; private set; }        
+        public RelayCommand GenerateVoronoiMeshCommand { get; private set; }
+        //
+        private void CreateVoronoiMesh()
+        {
+            ClearModels();
+      
+            var voronoi = Utils.VoronoiTriangles(
+                Utils.FibonacciSphere(FibonacciSamples) 
+                           .Select(p => new System.Numerics.Vector3(p.X, p.Y, p.Z)))
+                           .ToList();
+            
+            var builder = new MeshBuilder();
+            foreach (var cell in voronoi)
+            {
+                var polygonData = cell.Vertices
+                    .Select(v => new Vector3((float)v.X,(float)v.Y,(float)v.Z)).ToList();
+                builder.AddPolygon(polygonData);
+            }
+            var mesh = builder.ToMeshGeometry3D();
+            mesh.Colors = new Color4Collection(mesh.TextureCoordinates.Select(x => x.ToColor4()));
+            Model = mesh;
+            RaisePropertyChanged(nameof(Model));
+        }
+
+        private void CreateStereographicProjection()
+        {
+            ClearModels();
+
+            var ptPos = new Vector3Collection();
+            var ptIdx = new IntCollection();
+
+            var projectionPoints = Utils.FibonacciSphere(FibonacciSamples)
+                .Select(p => Utils.StereographicProjection(p.X,p.Y,p.Z))
+                .Select(p => new Vector3(p.U, p.V, 0.0f));
+            foreach (var p in projectionPoints)
+            {
+                ptIdx.Add(ptPos.Count);
+                ptPos.Add(p);
+            }
+
+            Points.Positions = ptPos;
+            Points.Indices = ptIdx;
+        }
 
         private void CreateFibonacciSphereMesh()
         {
@@ -118,6 +165,9 @@ namespace Adventure.World.Visualizer.ViewModel
         {
             Points.Positions = new Vector3Collection();
             Points.Indices = new IntCollection();
+
+            Model = new MeshGeometry3D();
+            RaisePropertyChanged(nameof(Model));
         }
 
         public PerspectiveCamera Camera { get; private set; }

@@ -30,12 +30,16 @@
             </MenuItem>
         </Menu>
         <StackPanel Margin="10" Grid.Row="1" Grid.Column="0">
-            <Button Content="Fibonacci Sphere" Command="{Binding GenerateFibonacciSphereCommand}"/>
-            <DockPanel VerticalAlignment="Center" Margin="10">
+            <Button Content="Fibonacci Sphere" Margin="10" Command="{Binding GenerateFibonacciSphereCommand}"/>
+
+            <DockPanel VerticalAlignment="Center" Margin="5">
                 <Label VerticalContentAlignment="Center" Content="{Binding ElementName=FibonacciSamples, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" Width="60" />
                 <Label VerticalContentAlignment="Center" Content="Fibonacci Samples: " DockPanel.Dock="Left"/>
                 <Slider Value="{Binding FibonacciSamples}" Name="FibonacciSamples" Maximum="10000" Minimum="100" VerticalContentAlignment="Center" TickFrequency="100" />
             </DockPanel>
+
+            <Button Content="Stereographic Projection" Margin="5" Command="{Binding GenerateStereographicProjectionCommand}"/>
+            <Button Content="Voronoi Mesh" Margin="5" Command="{Binding GenerateVoronoiMeshCommand}"/>
         </StackPanel>
         <hx:Viewport3DX
             Margin="5"
@@ -61,6 +65,7 @@
             <hx:AmbientLight3D Color="{Binding AmbientLightColor}" />
             <hx:DirectionalLight3D Direction="{Binding Camera.LookDirection}" Color="{Binding DirectionalLightColor}" />
             <hx:PointGeometryModel3D Geometry="{Binding Points}" Color="FloralWhite" /> 
+            <hx:MeshGeometryModel3D Geometry="{Binding Model}" WireframeColor="White" RenderWireframe="True" Material="{Binding RedMaterial}"/>
             <!--<hx:ScreenQuadModel3D Texture="{Binding BackgroundTexture}" />-->
         </hx:Viewport3DX>
 
