@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using MIConvexHull;
+using Poly2Tri;
+using Poly2Tri.Triangulation.Polygon;
 
 namespace Adventure.World
 {
@@ -24,6 +26,13 @@ namespace Adventure.World
         {
             var voronoiMesh = VoronoiMesh.Create(points.Select(p => new Vertex3(p.X, p.Y, p.Z)).ToList());
             return voronoiMesh.Vertices;
+        }
+
+        public static Polygon DelaunayTriangulationOnPlane(IEnumerable<Vector3> data)
+        {
+            var polygon = new Polygon(data.Select(p => new PolygonPoint(p.X, p.Y)));
+            P2T.Triangulate(polygon);
+            return polygon;
         }
 
         //credit: adapted from here - https://stackoverflow.com/a/26127012/320103

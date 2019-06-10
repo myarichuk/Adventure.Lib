@@ -39,7 +39,7 @@
             </DockPanel>
 
             <Button Content="Stereographic Projection" Margin="5" Command="{Binding GenerateStereographicProjectionCommand}"/>
-            <Button Content="Voronoi Mesh" Margin="5" Command="{Binding GenerateVoronoiMeshCommand}"/>
+            <Button Content="Delaunay Mesh" Margin="5" Command="{Binding GenerateDelaunayMeshCommand}"/>
         </StackPanel>
         <hx:Viewport3DX
             Margin="5"
