@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Adventure.Map;
+using Adventure.World;
 
 namespace Adventure.Playground
 {
