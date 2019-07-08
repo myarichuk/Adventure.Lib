@@ -55,7 +55,7 @@
             ShowViewCube="False"
             ModelUpDirection="{Binding UpDirection}"
             ShowCoordinateSystem="True"
-            TextBrush="Black"
+            TextBrush="White"
             UseDefaultGestures="False">
             <hx:Viewport3DX.InputBindings>
                 <KeyBinding Command="hx:ViewportCommands.ZoomExtents" Gesture="Control+E" />
@@ -63,10 +63,10 @@
                 <MouseBinding Command="hx:ViewportCommands.Zoom" Gesture="MiddleClick" />
                 <MouseBinding Command="hx:ViewportCommands.Pan" Gesture="LeftClick" />
             </hx:Viewport3DX.InputBindings>
-            <hx:AmbientLight3D Color="{Binding AmbientLightColor}" />
+            <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
             <hx:DirectionalLight3D Direction="{Binding Camera.LookDirection}" Color="{Binding DirectionalLightColor}" />
             <hx:PointGeometryModel3D Geometry="{Binding Points}" Color="FloralWhite" /> 
-            <hx:MeshGeometryModel3D Geometry="{Binding Model}" WireframeColor="White" RenderWireframe="True" Material="{Binding RedMaterial}"/>
+            <hx:MeshGeometryModel3D Geometry="{Binding Model}" WireframeColor="White" RenderWireframe="false" Material="{Binding VertexColorMaterial}"/>
             <!--<hx:ScreenQuadModel3D Texture="{Binding BackgroundTexture}" />-->
         </hx:Viewport3DX>
 

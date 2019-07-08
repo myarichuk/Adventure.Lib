@@ -1,18 +1,23 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Media.Media3D;
+using DefaultECS.EntityFactory;
 using Fasterflect;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
+using HelixToolkit.Wpf;
 using HelixToolkit.Wpf.SharpDX;
+using HelixToolkit.Wpf.SharpDX.Model;
 using MIConvexHull;
 using SharpDX;
 using SharpDX.Direct2D1.Effects;
 using Color = SharpDX.Color;
+using Material = HelixToolkit.Wpf.SharpDX.Material;
 using MeshGeometry3D = HelixToolkit.Wpf.SharpDX.MeshGeometry3D;
 using PerspectiveCamera = HelixToolkit.Wpf.SharpDX.PerspectiveCamera;
 using Transform3D = SharpDX.Direct2D1.Effects.Transform3D;
@@ -59,7 +64,7 @@ namespace Adventure.World.Visualizer.ViewModel
             };
 
             // setup lighting            
-            AmbientLightColor = Color.DimGray;
+            AmbientLightColor = Color.White;
             DirectionalLightColor = Color.White;
             DirectionalLightDirection = new Vector3D(-2, -5, -2);
 
@@ -76,7 +81,7 @@ namespace Adventure.World.Visualizer.ViewModel
             var e1 = new LineBuilder();
             e1.AddBox(new Vector3(0, 0, 0), 1, 0.5, 2);
 
-       
+            VertexColorMaterial = new VertColorMaterial();
             RedMaterial = PhongMaterials.BlackPlastic;
         
             //var diffColor = this.RedMaterial.DiffuseColor;
@@ -111,14 +116,14 @@ namespace Adventure.World.Visualizer.ViewModel
         {
             ClearModels();
       
-            var delauny = Utils.VoronoiTriangles(
+            var voronoiVertices = Utils.VoronoiTriangles(
                 Utils.FibonacciSphere(FibonacciSamples, false)
                 .Select(v => Utils.StereographicProjection(v.X,v.Y,v.Z))
                 .Select(v => new Vertex2(v.U, v.V))).ToList();
             
             var builder = new MeshBuilder();
             
-            foreach (var cell in delauny)
+            foreach (var cell in voronoiVertices)
             {
                 var polygonData = cell.Vertices
                     .Select(v => Utils.InverseStereographicProjection(v.X, v.Y))
@@ -135,29 +140,81 @@ namespace Adventure.World.Visualizer.ViewModel
         {
             ClearModels();
       
-            var voronoi = Utils.VoronoiMesh(
-                Utils.FibonacciSphere(FibonacciSamples)
+            var voronoiMesh = Utils.VoronoiMesh(
+                Utils.FibonacciSphere(FibonacciSamples, false)
                     .Select(v => Utils.StereographicProjection(v.X,v.Y,v.Z))
-                    .Select(v => new Vertex2(v.U, v.V)));
-
-
-            var builder = new MeshBuilder();     
-
-            foreach (var cell in voronoi.Vertices)
-            {                
-                if(cell.Adjacency == null)
-                    continue;
-
-                var polygonData = cell.Adjacency.Where(a => a != null).Select(a => a.Centroid)
-                    .Select(v => Utils.InverseStereographicProjection(v.X, v.Y))
-                    .Select(v => new Vector3((float) v.X, (float) v.Y, (float) v.Z)).ToList();
-                if (polygonData.Count < 3)
-                    continue;
-
-                builder.AddPolygon(polygonData);
+                    .Select(v => new Vertex2(v.U, v.V)).ToList());
+            
+            var meshBuilder = new MeshBuilder();
+            
+            var voronoiEdges = new List<(Vertex2 from, Vertex2 to)>();
+            foreach (var edge in voronoiMesh.Edges)
+            {
+                var from = edge.Source.Centroid;
+                var to = edge.Target.Centroid;
+                voronoiEdges.Add((from, to));
             }
-            var mesh = builder.ToMeshGeometry3D();
-            mesh.Colors = new Color4Collection(mesh.TextureCoordinates.Select(x => x.ToColor4()));
+                
+            foreach (var cell in voronoiMesh.Vertices)
+            {                
+                for (int i = 0; i < 3; i++)
+                {
+                    if (cell.Adjacency[i] == null)
+                    {
+                        var from = cell.Centroid;
+                        var t = cell.Vertices.Where((_, j) => j != i).ToArray();
+                        var factor = 100 * Utils.IsLeft(t[0], t[1], from) * Utils.IsLeft(t[0], t[1], Utils.Center(cell));
+                        var dir = new Vertex2(0.5 * (t[0].Position[0] + t[1].Position[0]), 0.5 * (t[0].Position[1] + t[1].Position[1])) - from;
+                        var to = from + (dir * factor);
+                        voronoiEdges.Add((from, to));
+                        
+                    }
+                }
+              
+            }
+
+            var polygons = Utils.Polygonize(voronoiEdges).ToList();
+            int index = 0;
+            var colors = new List<Color4>();
+            foreach (var polygon in polygons)
+            {
+                var builder = new MeshBuilder();
+                var polygonData = polygon
+                    .Select(v => Utils.InverseStereographicProjection(v.X, v.Y))
+                    .Select(v => new Vector3((float) v.X, (float) v.Y, (float) v.Z))
+                    .ToList();
+
+                var normal = new Vector3(polygonData[0].X, polygonData[0].Y, polygonData[0].Z);
+                for (var i=1; i<polygonData.Count; i++)
+                {
+                    normal = Vector3.Cross(normal, polygonData[i]);
+                }
+
+                builder.AddTriangleFan(polygonData,
+                    Enumerable.Repeat(normal, polygonData.Count).ToList(),
+                    polygonData.Select(v => new Vector2((float) (0.5),(float) (0.5))).ToList());
+                
+                meshBuilder.Append(builder);
+                if(index % 2 == 0)
+                    colors.AddRange(Enumerable.Repeat(Color4.White,polygonData.Count));
+                if(index % 3 == 0)
+                    colors.AddRange(Enumerable.Repeat(Color.Red.ToColor4(),polygonData.Count));
+                if(index % 4 == 0)
+                    colors.AddRange(Enumerable.Repeat(Color.Blue.ToColor4(),polygonData.Count));
+                if(index % 5 == 0)
+                    colors.AddRange(Enumerable.Repeat(Color.Green.ToColor4(),polygonData.Count));
+                if(index % 6 == 0)
+                    colors.AddRange(Enumerable.Repeat(Color.Yellow.ToColor4(),polygonData.Count));
+                if(index % 7 == 0)
+                    colors.AddRange(Enumerable.Repeat(Color.Brown.ToColor4(),polygonData.Count));
+                if(index % 8 == 0)
+                    colors.AddRange(Enumerable.Repeat(Color.Beige.ToColor4(),polygonData.Count));
+                if(index % 9 == 0)
+                    colors.AddRange(Enumerable.Repeat(Color.DarkRed.ToColor4(),polygonData.Count));
+                index++;
+            }
+            var mesh = meshBuilder.ToMesh();
+            mesh.Colors = new Color4Collection(colors);
             Model = mesh;
             RaisePropertyChanged(nameof(Model));
         }
@@ -223,6 +280,7 @@ namespace Adventure.World.Visualizer.ViewModel
         public PointGeometry3D Points { get; private set; }
 
         public PhongMaterial RedMaterial { get; private set; }
+        public Material VertexColorMaterial { get; private set; }
 
         public EffectsManager EffectsManager { get; private set; }
         public Vector3D DirectionalLightDirection { get; private set; }
