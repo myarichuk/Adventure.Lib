@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Media.Media3D;
+using Fasterflect;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
 using HelixToolkit.Wpf.SharpDX;
-using Poly2Tri.Triangulation;
-using Poly2Tri.Triangulation.Polygon;
+using MIConvexHull;
 using SharpDX;
 using SharpDX.Direct2D1.Effects;
 using Color = SharpDX.Color;
@@ -95,27 +96,64 @@ namespace Adventure.World.Visualizer.ViewModel
 
             GenerateFibonacciSphereCommand = new RelayCommand(CreateFibonacciSphereMesh);
             GenerateStereographicProjectionCommand = new RelayCommand(CreateStereographicProjection);
-            GenerateDelaunayMeshCommand = new RelayCommand(CreateDelaunayTriangulationOnPlane);
+            DelaunayMeshCommand = new RelayCommand(CreateDelaunayMesh);
+            VoronoiMeshCommand = new RelayCommand(CreateVoronoiMesh);
         }
 
         public RelayCommand GenerateFibonacciSphereCommand { get; private set; }
         public RelayCommand GenerateStereographicProjectionCommand { get; private set; }        
-        public RelayCommand GenerateDelaunayMeshCommand { get; private set; }
+        public RelayCommand DelaunayMeshCommand { get; private set; }
+        public RelayCommand VoronoiMeshCommand { get; private set; }
         
+     
+
+        private void CreateDelaunayMesh()
+        {
+            ClearModels();
+      
+            var delauny = Utils.VoronoiTriangles(
+                Utils.FibonacciSphere(FibonacciSamples, false)
+                .Select(v => Utils.StereographicProjection(v.X,v.Y,v.Z))
+                .Select(v => new Vertex2(v.U, v.V))).ToList();
+            
+            var builder = new MeshBuilder();
+            
+            foreach (var cell in delauny)
+            {
+                var polygonData = cell.Vertices
+                    .Select(v => Utils.InverseStereographicProjection(v.X, v.Y))
+                    .Select(v => new Vector3((float)v.X,(float)v.Y,(float)v.Z)).ToList();
+                builder.AddPolygon(polygonData);
+            }
+            var mesh = builder.ToMeshGeometry3D();
+            mesh.Colors = new Color4Collection(mesh.TextureCoordinates.Select(x => x.ToColor4()));
+            Model = mesh;
+            RaisePropertyChanged(nameof(Model));
+        }
+
         private void CreateVoronoiMesh()
         {
             ClearModels();
       
-            var voronoi = Utils.VoronoiTriangles(
-                Utils.FibonacciSphere(FibonacciSamples) 
-                           .Select(p => new System.Numerics.Vector3(p.X, p.Y, p.Z)))
-                           .ToList();
-            
-            var builder = new MeshBuilder();
-            foreach (var cell in voronoi)
-            {
-                var polygonData = cell.Vertices
-                    .Select(v => new Vector3((float)v.X,(float)v.Y,(float)v.Z)).ToList();
+            var voronoi = Utils.VoronoiMesh(
+                Utils.FibonacciSphere(FibonacciSamples)
+                    .Select(v => Utils.StereographicProjection(v.X,v.Y,v.Z))
+                    .Select(v => new Vertex2(v.U, v.V)));
+
+
+            var builder = new MeshBuilder();     
+
+            foreach (var cell in voronoi.Vertices)
+            {                
+                if(cell.Adjacency == null)
+                    continue;
+
+                var polygonData = cell.Adjacency.Where(a => a != null).Select(a => a.Centroid)
+                    .Select(v => Utils.InverseStereographicProjection(v.X, v.Y))
+                    .Select(v => new Vector3((float) v.X, (float) v.Y, (float) v.Z)).ToList();
+                if (polygonData.Count < 3)
+                    continue;
+
                 builder.AddPolygon(polygonData);
             }
             var mesh = builder.ToMeshGeometry3D();
@@ -131,7 +169,7 @@ namespace Adventure.World.Visualizer.ViewModel
             var ptPos = new Vector3Collection();
             var ptIdx = new IntCollection();
 
-            var projectionPoints = GetStereographicProjectionPoints().Select(p => new Vector3(p.X,p.Y,p.Z));
+            var projectionPoints = GetStereographicProjectionPoints().Select(p => new Vector3((float)p.X,(float)p.Y,(float)p.Z));
 
             foreach (var p in projectionPoints)
             {
@@ -143,30 +181,12 @@ namespace Adventure.World.Visualizer.ViewModel
             Points.Indices = ptIdx;
         }
 
-        private void CreateDelaunayTriangulationOnPlane()
-        {
-            ClearModels();
-            var polygon = Utils.DelaunayTriangulationOnPlane(GetStereographicProjectionPoints());
+  
 
-            Vector3 TriangulationPointToVertex(TriangulationPoint p) => new Vector3(p.Xf, p.Yf, 0.0f);
-            
-            var ptPos = new Vector3Collection();
-            var ptIdx = new IntCollection();
-            
-            foreach (var p in polygon.Points.Select(TriangulationPointToVertex))
-            {
-                ptIdx.Add(ptPos.Count);
-                ptPos.Add(p);
-            }
-
-            Points.Positions = ptPos;
-            Points.Indices = ptIdx;
-        }
-
-        private IEnumerable<System.Numerics.Vector3> GetStereographicProjectionPoints() =>
+        private IEnumerable<Vertex3> GetStereographicProjectionPoints() =>
             Utils.FibonacciSphere(FibonacciSamples)
                 .Select(p => Utils.StereographicProjection(p.X, p.Y, p.Z))
-                .Select(p => new System.Numerics.Vector3(p.U, p.V, 0.0f));
+                .Select(p => new Vertex3(p.U, p.V, 0.0f));
 
         private void CreateFibonacciSphereMesh()
         {
@@ -175,7 +195,7 @@ namespace Adventure.World.Visualizer.ViewModel
             var ptPos = new Vector3Collection();
             var ptIdx = new IntCollection();
 
-            var fibonacciPoints = Utils.FibonacciSphere(FibonacciSamples).Select(p => new SharpDX.Vector3(p.X, p.Y, p.Z));
+            var fibonacciPoints = Utils.FibonacciSphere(FibonacciSamples).Select(p => new SharpDX.Vector3((float)p.X, (float)p.Y, (float)p.Z));
             foreach (var p in fibonacciPoints)
             {
                 ptIdx.Add(ptPos.Count);
