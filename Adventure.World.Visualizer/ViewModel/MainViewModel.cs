@@ -103,12 +103,14 @@ namespace Adventure.World.Visualizer.ViewModel
             GenerateStereographicProjectionCommand = new RelayCommand(CreateStereographicProjection);
             DelaunayMeshCommand = new RelayCommand(CreateDelaunayMesh);
             VoronoiMeshCommand = new RelayCommand(CreateVoronoiMesh);
+            CentroidMeshCommand = new RelayCommand(CreateCentroidMesh);
         }
 
         public RelayCommand GenerateFibonacciSphereCommand { get; private set; }
         public RelayCommand GenerateStereographicProjectionCommand { get; private set; }        
         public RelayCommand DelaunayMeshCommand { get; private set; }
         public RelayCommand VoronoiMeshCommand { get; private set; }
+        public RelayCommand CentroidMeshCommand { get; private set; }
         
      
 
@@ -131,12 +133,14 @@ namespace Adventure.World.Visualizer.ViewModel
                 builder.AddPolygon(polygonData);
             }
             var mesh = builder.ToMeshGeometry3D();
-            mesh.Colors = new Color4Collection(mesh.TextureCoordinates.Select(x => x.ToColor4()));
+            var random = new Random();
+            mesh.Colors = new Color4Collection(mesh.TextureCoordinates.Select(x => random.NextColor().ToColor4()));
             Model = mesh;
             RaisePropertyChanged(nameof(Model));
         }
 
-        private void CreateVoronoiMesh()
+        
+        private void CreateCentroidMesh()
         {
             ClearModels();
       
@@ -174,8 +178,8 @@ namespace Adventure.World.Visualizer.ViewModel
             }
 
             var polygons = Utils.Polygonize(voronoiEdges).ToList();
-            int index = 0;
             var colors = new List<Color4>();
+            var random = new Random();
             foreach (var polygon in polygons)
             {
                 var builder = new MeshBuilder();
@@ -195,23 +199,76 @@ namespace Adventure.World.Visualizer.ViewModel
                     polygonData.Select(v => new Vector2((float) (0.5),(float) (0.5))).ToList());
                 
                 meshBuilder.Append(builder);
-                if(index % 2 == 0)
-                    colors.AddRange(Enumerable.Repeat(Color4.White,polygonData.Count));
-                if(index % 3 == 0)
-                    colors.AddRange(Enumerable.Repeat(Color.Red.ToColor4(),polygonData.Count));
-                if(index % 4 == 0)
-                    colors.AddRange(Enumerable.Repeat(Color.Blue.ToColor4(),polygonData.Count));
-                if(index % 5 == 0)
-                    colors.AddRange(Enumerable.Repeat(Color.Green.ToColor4(),polygonData.Count));
-                if(index % 6 == 0)
-                    colors.AddRange(Enumerable.Repeat(Color.Yellow.ToColor4(),polygonData.Count));
-                if(index % 7 == 0)
-                    colors.AddRange(Enumerable.Repeat(Color.Brown.ToColor4(),polygonData.Count));
-                if(index % 8 == 0)
-                    colors.AddRange(Enumerable.Repeat(Color.Beige.ToColor4(),polygonData.Count));
-                if(index % 9 == 0)
-                    colors.AddRange(Enumerable.Repeat(Color.DarkRed.ToColor4(),polygonData.Count));
-                index++;
+                colors.AddRange(Enumerable.Repeat(random.NextColor().ToColor4(),polygonData.Count));
+           
+            }
+            var mesh = meshBuilder.ToMesh();
+            mesh.Colors = new Color4Collection(colors);
+            Model = mesh;
+            RaisePropertyChanged(nameof(Model));
+        }
+
+        private void CreateVoronoiMesh()
+        {
+            ClearModels();
+      
+            var voronoiMesh = Utils.VoronoiMesh(
+                Utils.FibonacciSphere(FibonacciSamples, false)
+                    .Select(v => Utils.StereographicProjection(v.X,v.Y,v.Z))
+                    .Select(v => new Vertex2(v.U, v.V)).ToList());
+            
+            var meshBuilder = new MeshBuilder();
+            
+            var voronoiEdges = new List<(Vertex2 from, Vertex2 to)>();
+            foreach (var edge in voronoiMesh.Edges)
+            {
+                var from = edge.Source.Circumcenter;
+                var to = edge.Target.Circumcenter;
+                voronoiEdges.Add((from, to));
+            }
+                
+            foreach (var cell in voronoiMesh.Vertices)
+            {                
+                for (int i = 0; i < 3; i++)
+                {
+                    if (cell.Adjacency[i] == null)
+                    {
+                        var from = cell.Circumcenter;
+                        var t = cell.Vertices.Where((_, j) => j != i).ToArray();
+                        var factor = 100 * Utils.IsLeft(t[0], t[1], from) * Utils.IsLeft(t[0], t[1], Utils.Center(cell));
+                        var dir = new Vertex2(0.5 * (t[0].Position[0] + t[1].Position[0]), 0.5 * (t[0].Position[1] + t[1].Position[1])) - from;
+                        var to = from + (dir * factor);
+                        voronoiEdges.Add((from, to));
+                        
+                    }
+                }
+              
+            }
+
+            var polygons = Utils.Polygonize(voronoiEdges).ToList();
+            var colors = new List<Color4>();
+            var random = new Random();
+            foreach (var polygon in polygons)
+            {
+                var builder = new MeshBuilder();
+                var polygonData = polygon
+                    .Select(v => Utils.InverseStereographicProjection(v.X, v.Y))
+                    .Select(v => new Vector3((float) v.X, (float) v.Y, (float) v.Z))
+                    .ToList();
+
+                var normal = new Vector3(polygonData[0].X, polygonData[0].Y, polygonData[0].Z);
+                for (var i=1; i<polygonData.Count; i++)
+                {
+                    normal = Vector3.Cross(normal, polygonData[i]);
+                }
+
+                builder.AddTriangleFan(polygonData,
+                    Enumerable.Repeat(normal, polygonData.Count).ToList(),
+                    polygonData.Select(v => new Vector2((float) (0.5),(float) (0.5))).ToList());
+                
+                meshBuilder.Append(builder);
+                colors.AddRange(Enumerable.Repeat(random.NextColor().ToColor4(),polygonData.Count));
+           
             }
             var mesh = meshBuilder.ToMesh();
             mesh.Colors = new Color4Collection(colors);
