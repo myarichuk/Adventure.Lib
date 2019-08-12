@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using MIConvexHull;
+
+// credit: adapted from https://github.com/DesignEngrLab/MIConvexHull/blob/master/Examples/4%20DelaunayAndVoronoiWPF/Cell.cs
 
 namespace Adventure.World
 {

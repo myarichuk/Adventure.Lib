@@ -9,7 +9,6 @@
     <PackageReference Include="DefaultECS.EntityFactory" Version="0.0.3" />
     <PackageReference Include="MIConvexHull" Version="1.1.19.504" />
     <PackageReference Include="NetTopologySuite" Version="1.15.3" />
-    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
   </ItemGroup>
 

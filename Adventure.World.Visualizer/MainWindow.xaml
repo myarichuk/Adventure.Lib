@@ -42,6 +42,13 @@
             <Button Content="Delaunay Mesh on Sphere" Margin="5" Command="{Binding DelaunayMeshCommand}"/>
             <Button Content="Voronoi Mesh on Sphere" Margin="5" Command="{Binding VoronoiMeshCommand}"/>
             <Button Content="Centroid Mesh on Sphere" Margin="5" Command="{Binding CentroidMeshCommand}"/>
+            <DockPanel VerticalAlignment="Center" Margin="5">
+                <Label VerticalContentAlignment="Center" Content="{Binding ElementName=IcosahedronSubdivision, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" Width="60" />
+                <Label VerticalContentAlignment="Center" Content="Subdivision recursion: " DockPanel.Dock="Left"/>
+                <Slider Value="{Binding IcosahedronSubdivision}" Name="IcosahedronSubdivision" Maximum="5" Minimum="0" VerticalContentAlignment="Center" TickFrequency="100" />
+            </DockPanel>
+            <Button Content="Subdivided Icosahedron" Margin="5" Command="{Binding SubdividedIcosahedronCommand}"/>
+            
         </StackPanel>
         <hx:Viewport3DX
             Margin="5"
@@ -67,7 +74,7 @@
             <hx:AmbientLight3D Color="{Binding AmbientLightColor}"/>
             <hx:DirectionalLight3D Direction="{Binding Camera.LookDirection}" Color="{Binding DirectionalLightColor}" />
             <hx:PointGeometryModel3D Geometry="{Binding Points}" Color="FloralWhite" /> 
-            <hx:MeshGeometryModel3D Geometry="{Binding Model}" WireframeColor="White" RenderWireframe="false" Material="{Binding VertexColorMaterial}"/>
+            <hx:MeshGeometryModel3D Geometry="{Binding Model}" WireframeColor="White" RenderWireframe="False" Material="{Binding VertexColorMaterial}"/>
             <!--<hx:ScreenQuadModel3D Texture="{Binding BackgroundTexture}" />-->
         </hx:Viewport3DX>
 

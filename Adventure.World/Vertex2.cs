@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Data.Common;
-using System.Security.Policy;
 using MIConvexHull;
 
 namespace Adventure.World

@@ -1,26 +1,16 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Media.Media3D;
-using DefaultECS.EntityFactory;
-using Fasterflect;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
-using HelixToolkit.Wpf;
 using HelixToolkit.Wpf.SharpDX;
-using HelixToolkit.Wpf.SharpDX.Model;
-using MIConvexHull;
 using SharpDX;
-using SharpDX.Direct2D1.Effects;
 using Color = SharpDX.Color;
 using Material = HelixToolkit.Wpf.SharpDX.Material;
 using MeshGeometry3D = HelixToolkit.Wpf.SharpDX.MeshGeometry3D;
 using PerspectiveCamera = HelixToolkit.Wpf.SharpDX.PerspectiveCamera;
-using Transform3D = SharpDX.Direct2D1.Effects.Transform3D;
 
 namespace Adventure.World.Visualizer.ViewModel
 {
@@ -89,7 +79,6 @@ namespace Adventure.World.Visualizer.ViewModel
             //this.RedMaterial.DiffuseColor = diffColor;   
 
             Points = new PointGeometry3D();
-           
 
             BackgroundTexture =
                 BitmapExtensions.CreateLinearGradientBitmapStream(EffectsManager, 128, 128, Direct2DImageFormat.Bmp,
@@ -104,6 +93,7 @@ namespace Adventure.World.Visualizer.ViewModel
             DelaunayMeshCommand = new RelayCommand(CreateDelaunayMesh);
             VoronoiMeshCommand = new RelayCommand(CreateVoronoiMesh);
             CentroidMeshCommand = new RelayCommand(CreateCentroidMesh);
+            SubdividedIcosahedronCommand = new RelayCommand(CreateSubdividedIcosahedron);
         }
 
         public RelayCommand GenerateFibonacciSphereCommand { get; private set; }
@@ -111,8 +101,124 @@ namespace Adventure.World.Visualizer.ViewModel
         public RelayCommand DelaunayMeshCommand { get; private set; }
         public RelayCommand VoronoiMeshCommand { get; private set; }
         public RelayCommand CentroidMeshCommand { get; private set; }
-        
-     
+        public RelayCommand SubdividedIcosahedronCommand { get; private set; }
+
+        private void CreateSubdividedIcosahedron()
+        {
+            ClearModels();
+            var builder = new MeshBuilder();
+
+            var icosahedronData = BuildInitialIcosahedron();
+
+            icosahedronData = SubdivideIcosahedron(IcosahedronSubdivision, icosahedronData);
+            foreach (var trianglePositions in icosahedronData)
+                builder.AddTriangle(trianglePositions[0], trianglePositions[1], trianglePositions[2]);
+            
+            var mesh = builder.ToMeshGeometry3D();
+            var random = new Random();
+            mesh.Colors = new Color4Collection(mesh.TextureCoordinates.Select(x => random.NextColor().ToColor4()));
+            Model = mesh;
+            RaisePropertyChanged(nameof(Model));
+        }
+
+        private Vector3 GetMiddle(Vector3 v1, Vector3 v2, float size = 1.0f)
+        {
+            Vector3 Scale(Vector3 v, float d)
+            {
+                return new Vector3(v.X * d, v.Y * d, v.Z * d);
+            }
+
+            //The golden ratio
+            var t = (1 + Math.Sqrt(5)) / 2;
+            //Calculate the middle
+            var temporaryVector = Scale(v2 - v1, 0.5f) + v1;
+
+            //Offset point
+            temporaryVector.Normalize();
+            temporaryVector = Scale(temporaryVector, (float)(Math.Sqrt(t * t + 1) * size));
+
+            return temporaryVector;
+        }
+
+        List<Vector3[]> SubdivideIcosahedron(int recursionLevel, List<Vector3[]> icosohedronData)
+        {
+            for (int i = 0; i < recursionLevel; i++)
+            {
+                var faces2 = new List<Vector3[]>();
+                foreach (var tri in icosohedronData)
+                {
+                    // replace triangle by 4 triangles
+                    var vec1 = GetMiddle(tri[0], tri[1]);
+                    var vec2 = GetMiddle(tri[1], tri[2]);
+                    var vec3 = GetMiddle(tri[2], tri[0]);
+
+                    faces2.Add(new []{tri[0], vec1, vec3});
+                    faces2.Add(new []{tri[1], vec2, vec1});
+                    faces2.Add(new []{tri[2], vec3, vec2});
+                    faces2.Add(new []{vec1, vec2, vec3});
+                }
+                icosohedronData = faces2;
+            }
+            return icosohedronData;
+        }
+
+        List<Vector3[]> BuildInitialIcosahedron(float size = 1.0f)
+        {
+            var faceList = new List<Vector3[]>();
+
+            //The golden ratio
+            var t = (float) ((1 +Math.Sqrt(5))/ 2);
+
+            //Define the points needed to build a icosahedron, stolen from article
+            var vertices = new Vector3 [12];
+            vertices[0] = new Vector3(-size, t*size, 0);
+            vertices[1] = new Vector3(size, t*size, 0);
+            vertices[2] = new Vector3(-size, -t*size, 0);
+            vertices[3] = new Vector3(size, -t*size, 0);
+
+            vertices[4] = new Vector3(0, -size, t*size);
+            vertices[5] = new Vector3(0, size, t*size);
+            vertices[6] = new Vector3(0, -size, -t*size);
+            vertices[7] = new Vector3(0, size, -t*size);
+
+            vertices[8] = new Vector3(t*size, 0, -size);
+            vertices[9] = new Vector3(t*size, 0, size);
+            vertices[10] = new Vector3(-t*size, 0, -size);
+            vertices[11] = new Vector3(-t*size, 0, size);
+
+            void AddFace(List<Vector3[]> list, Vector3 v1, Vector3 v2, Vector3 v3) => 
+                list.Add(new [] {v1, v2, v3 });
+
+            // 5 faces around point 0
+            AddFace(faceList,vertices[0], vertices[11], vertices[5]);
+            AddFace(faceList,vertices[0], vertices[5], vertices[1]);
+            AddFace(faceList,vertices[0], vertices[1], vertices[7]);
+            AddFace(faceList,vertices[0], vertices[7], vertices[10]);
+            AddFace(faceList,vertices[0], vertices[10], vertices[11]);
+
+            // 5 adjacent faces
+            AddFace(faceList,vertices[1], vertices[5], vertices[9]);
+            AddFace(faceList,vertices[5], vertices[11], vertices[4]);
+            AddFace(faceList,vertices[11], vertices[10], vertices[2]);
+            AddFace(faceList,vertices[10], vertices[7], vertices[6]);
+            AddFace(faceList,vertices[7], vertices[1], vertices[8]);
+
+            // 5 faces around point 3
+            AddFace(faceList,vertices[3], vertices[9], vertices[4]);
+            AddFace(faceList,vertices[3], vertices[4], vertices[2]);
+            AddFace(faceList,vertices[3], vertices[2], vertices[6]);
+            AddFace(faceList,vertices[3], vertices[6], vertices[8]);
+            AddFace(faceList,vertices[3], vertices[8], vertices[9]);
+
+            // 5 adjacent faces
+            AddFace(faceList,vertices[4], vertices[9], vertices[5]);
+            AddFace(faceList,vertices[2], vertices[4], vertices[11]);
+            AddFace(faceList,vertices[6], vertices[2], vertices[10]);
+            AddFace(faceList,vertices[8], vertices[6], vertices[7]);
+            AddFace(faceList,vertices[9], vertices[8], vertices[1]);
+
+            return faceList;
+        }
 
         private void CreateDelaunayMesh()
         {
@@ -143,7 +249,6 @@ namespace Adventure.World.Visualizer.ViewModel
         private void CreateCentroidMesh()
         {
             ClearModels();
-      
             var voronoiMesh = Utils.VoronoiMesh(
                 Utils.FibonacciSphere(FibonacciSamples, false)
                     .Select(v => Utils.StereographicProjection(v.X,v.Y,v.Z))
@@ -158,7 +263,6 @@ namespace Adventure.World.Visualizer.ViewModel
                 var to = edge.Target.Centroid;
                 voronoiEdges.Add((from, to));
             }
-                
             foreach (var cell in voronoiMesh.Vertices)
             {                
                 for (int i = 0; i < 3; i++)
@@ -321,6 +425,7 @@ namespace Adventure.World.Visualizer.ViewModel
         }
 
         public int FibonacciSamples { get; set; }
+        public int IcosahedronSubdivision { get; set; }
 
         private void ClearModels()
         {
