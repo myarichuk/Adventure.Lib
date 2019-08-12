@@ -30,25 +30,12 @@
             </MenuItem>
         </Menu>
         <StackPanel Margin="10" Grid.Row="1" Grid.Column="0">
-            <Button Content="Fibonacci Sphere" Margin="10" Command="{Binding GenerateFibonacciSphereCommand}"/>
-
-            <DockPanel VerticalAlignment="Center" Margin="5">
-                <Label VerticalContentAlignment="Center" Content="{Binding ElementName=FibonacciSamples, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" Width="60" />
-                <Label VerticalContentAlignment="Center" Content="Fibonacci Samples: " DockPanel.Dock="Left"/>
-                <Slider Value="{Binding FibonacciSamples}" Name="FibonacciSamples" Maximum="10000" Minimum="100" VerticalContentAlignment="Center" TickFrequency="100" />
-            </DockPanel>
-
-            <Button Content="Stereographic Projection" Margin="5" Command="{Binding GenerateStereographicProjectionCommand}"/>
-            <Button Content="Delaunay Mesh on Sphere" Margin="5" Command="{Binding DelaunayMeshCommand}"/>
-            <Button Content="Voronoi Mesh on Sphere" Margin="5" Command="{Binding VoronoiMeshCommand}"/>
-            <Button Content="Centroid Mesh on Sphere" Margin="5" Command="{Binding CentroidMeshCommand}"/>
             <DockPanel VerticalAlignment="Center" Margin="5">
                 <Label VerticalContentAlignment="Center" Content="{Binding ElementName=IcosahedronSubdivision, Path=Value, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" Width="60" />
                 <Label VerticalContentAlignment="Center" Content="Subdivision recursion: " DockPanel.Dock="Left"/>
-                <Slider Value="{Binding IcosahedronSubdivision}" Name="IcosahedronSubdivision" Maximum="5" Minimum="0" VerticalContentAlignment="Center" TickFrequency="100" />
+                <Slider Value="{Binding IcosahedronSubdivision}" Name="IcosahedronSubdivision" Maximum="7" Minimum="0" VerticalContentAlignment="Center" TickFrequency="100" />
             </DockPanel>
             <Button Content="Subdivided Icosahedron" Margin="5" Command="{Binding SubdividedIcosahedronCommand}"/>
-            
         </StackPanel>
         <hx:Viewport3DX
             Margin="5"
